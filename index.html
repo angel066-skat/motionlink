@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Traductor básico de Lengua de Señas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<h1>🤟 Traductor básico de señas</h1>
+<p>Reconoce palabras y forma oraciones</p>
+
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas"></canvas>
+
+<div class="panel">
+  <h3>Seña detectada:</h3>
+  <p id="resultado">Inicializando…</p>
+
+  <h3>Oración:</h3>
+  <p id="frase">—</p>
+  <button onclick="limpiarFrase()">Limpiar oración</button>
+</div>
+
+<div class="panel">
+  <h3>¿Qué palabra quieres hacer?</h3>
+  <select id="palabra">
+    <option value="hola">Hola</option>
+    <option value="teamo">Te amo</option>
+    <option value="si">Sí</option>
+    <option value="no">No</option>
+    <option value="paz">Paz</option>
+  </select>
+  <button onclick="mostrarInstrucciones()">Ver instrucciones</button>
+  <p id="instrucciones"></p>
+</div>
+
+<!-- MediaPipe -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js"></script>
+
+<script>
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const resultado = document.getElementById("resultado");
+const frase = document.getElementById("frase");
+
+canvas.width = 480;
+canvas.height = 360;
+
+let oracion = [];
+let ultimaSeña = "";
+
+// ====== MEDIAPIPE ======
+const hands = new Hands({
+  locateFile: (file) =>
+    `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${file}`
+});
+
+hands.setOptions({
+  maxNumHands: 1,
+  modelComplexity: 0,
+  minDetectionConfidence: 0.7,
+  minTrackingConfidence: 0.7
+});
+
+hands.onResults(onResults);
+
+// ====== CÁMARA ======
+async function iniciarCamara() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true
+    });
+
+    video.srcObject = stream;
+
+    async function detectar() {
+      await hands.send({ image: video });
+      requestAnimationFrame(detectar);
+    }
+
+    detectar();
+
+  } catch (error) {
+    resultado.innerText = "❌ Permiso de cámara denegado";
+  }
+}
+
+iniciarCamara();
+
+// ====== CONTAR DEDOS ======
+function contarDedos(landmarks) {
+  let dedos = 0;
+  const tips = [8, 12, 16, 20];
+
+  tips.forEach(tip => {
+    if (landmarks[tip].y < landmarks[tip - 2].y) dedos++;
+  });
+
+  if (landmarks[4].x < landmarks[3].x) dedos++;
+
+  return dedos;
+}
+
+// ====== RESULTADOS ======
+function onResults(results) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+
+  if (results.multiHandLandmarks?.length) {
+    const dedos = contarDedos(results.multiHandLandmarks[0]);
+    let seña = "Desconocida";
+
+    if (dedos === 5) seña = "Hola";
+    else if (dedos === 3) seña = "Te amo";
+    else if (dedos === 2) seña = "Paz";
+    else if (dedos === 1) seña = "Sí";
+    else if (dedos === 0) seña = "No";
+
+    resultado.innerText = seña;
+
+    if (seña !== "Desconocida" && seña !== ultimaSeña) {
+      oracion.push(seña);
+      frase.innerText = oracion.join(" ");
+      ultimaSeña = seña;
+    }
+
+  } else {
+    resultado.innerText = "No se detecta mano";
+    ultimaSeña = "";
+  }
+}
+
+// ====== INSTRUCCIONES ======
+function mostrarInstrucciones() {
+  const palabra = document.getElementById("palabra").value;
+  const instrucciones = document.getElementById("instrucciones");
+
+  const mapa = {
+    hola: "✋ Mano abierta con cinco dedos.",
+    teamo: "🤟 Pulgar, índice y meñique.",
+    si: "👍 Un dedo levantado.",
+    no: "✊ Puño cerrado.",
+    paz: "✌️ Índice y medio."
+  };
+
+  instrucciones.innerText = mapa[palabra];
+}
+
+// ====== LIMPIAR ======
+function limpiarFrase() {
+  oracion = [];
+  frase.innerText = "—";
+  ultimaSeña = "";
+}
+</script>
+
+</body>
+</html>

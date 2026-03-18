@@ -5,8 +5,34 @@
   <title>Traductor básico de Lengua de Señas</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="css/css.css">
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #f4f4f4;
+    }
+
+    video, canvas {
+      width: 480px;
+      border-radius: 10px;
+      margin: 10px;
+    }
+
+    .panel {
+      background: white;
+      padding: 15px;
+      margin: 10px auto;
+      width: 300px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    button {
+      padding: 8px 12px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
@@ -34,12 +60,33 @@
     <option value="si">Sí</option>
     <option value="no">No</option>
     <option value="paz">Paz</option>
+
+    <option value="gracias">Gracias</option>
+    <option value="amor">Amor</option>
+    <option value="amigo">Amigo</option>
+    <option value="familia">Familia</option>
+    <option value="comer">Comer</option>
+    <option value="beber">Beber</option>
+    <option value="dormir">Dormir</option>
+    <option value="escuela">Escuela</option>
+    <option value="trabajo">Trabajo</option>
+    <option value="dinero">Dinero</option>
+    <option value="ayuda">Ayuda</option>
+    <option value="feliz">Feliz</option>
+    <option value="triste">Triste</option>
+    <option value="bien">Bien</option>
+    <option value="mal">Mal</option>
+    <option value="perdon">Perdón</option>
+    <option value="salud">Salud</option>
+    <option value="nombre">Nombre</option>
+    <option value="yo">Yo</option>
+    <option value="tu">Tú</option>
   </select>
+
   <button onclick="mostrarInstrucciones()">Ver instrucciones</button>
   <p id="instrucciones"></p>
 </div>
 
-<!-- MediaPipe -->
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js"></script>
 
 <script>
@@ -117,11 +164,19 @@ function onResults(results) {
     const dedos = contarDedos(results.multiHandLandmarks[0]);
     let seña = "Desconocida";
 
+    // Base
     if (dedos === 5) seña = "Hola";
+    else if (dedos === 4) seña = "Gracias";
     else if (dedos === 3) seña = "Te amo";
     else if (dedos === 2) seña = "Paz";
     else if (dedos === 1) seña = "Sí";
     else if (dedos === 0) seña = "No";
+
+    // Variaciones (mismo gesto, otras palabras)
+    if (dedos === 5) seña = "Familia";
+    if (dedos === 2) seña = "Amigo";
+    if (dedos === 1) seña = "Bien";
+    if (dedos === 0) seña = "Mal";
 
     resultado.innerText = seña;
 
@@ -147,7 +202,28 @@ function mostrarInstrucciones() {
     teamo: "🤟 Pulgar, índice y meñique.",
     si: "👍 Un dedo levantado.",
     no: "✊ Puño cerrado.",
-    paz: "✌️ Índice y medio."
+    paz: "✌️ Índice y medio.",
+
+    gracias: "✋ Mano abierta hacia adelante.",
+    amor: "🤟 Igual que 'te amo'.",
+    amigo: "✌️ Dos dedos.",
+    familia: "✋ Mano abierta.",
+    comer: "🤏 Llevar dedos a la boca.",
+    beber: "👍 Simular vaso.",
+    dormir: "😴 Mano en la mejilla.",
+    escuela: "✋ Palmas juntas.",
+    trabajo: "✊ Golpear puños.",
+    dinero: "💰 Frotar dedos.",
+    ayuda: "✋ Ayudar con mano.",
+    feliz: "😊 Mano hacia arriba.",
+    triste: "☹️ Mano hacia abajo.",
+    bien: "👍 Pulgar arriba.",
+    mal: "👎 Pulgar abajo.",
+    perdon: "✊ Movimiento circular.",
+    salud: "👍 Desde boca.",
+    nombre: "✌️ Dedos cruzados.",
+    yo: "👉 Señalarse.",
+    tu: "👉 Señalar a otro."
   };
 
   instrucciones.innerText = mapa[palabra];
